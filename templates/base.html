@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8">
+    <title>{% block title %}SUAP Client{% endblock %}</title>
+  </head>
+  <body>
+    <header>
+      <h1>SUAP Client</h1>
+      <nav>
+        <a href="{{ url_for('index') }}">Início</a>
+        {% if user %}
+          <a href="{{ url_for('perfil') }}">Perfil</a>
+          <a href="{{ url_for('boletim') }}">Boletim</a>
+          <a href="{{ url_for('logout') }}">Sair</a>
+        {% else %}
+          <a href="{{ url_for('login') }}">Entrar com SUAP</a>
+        {% endif %}
+      </nav>
+    </header>
+
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

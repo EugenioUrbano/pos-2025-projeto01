@@ -1,5 +1,5 @@
 # Projeto da Unidade 02 de POS
-- Data de entrega: **13/08/2025**
+- Data de entrega: **12/09/2025**
 - Sem prorrogações!
 
 ## Instruções

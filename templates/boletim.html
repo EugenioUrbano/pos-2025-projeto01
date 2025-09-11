@@ -68,7 +68,13 @@
                             <td>{{ d.notas[2].nota if d.notas|length >= 3 else '–' }}</td>
                             <td>{{ d.notas[3].nota if d.notas|length >= 4 else '–' }}</td>
                             <td><strong>{{ d.media_final }}</strong></td>
-                            <td>{{ d.situacao }}</td>
+                            {% if d.situacao == "Aprovado"%}
+                            <td class="bg-success text-black">{{ d.situacao }}</td>
+                            {% elif d.situacao == "Reprovado"%}
+                            <td class="bg-danger text-black">{{ d.situacao }}</td>
+                            {% elif d.situacao == "Cursando"%}
+                            <td class="bg-warning text-black">{{ d.situacao }}</td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </tbody>

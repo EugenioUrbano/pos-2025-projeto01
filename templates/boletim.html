@@ -63,17 +63,19 @@
                                     100%
                                 {% endif %}
                             </td>
-                            <td>{{ d.notas[0].nota if d.notas|length >= 1 else '–' }}</td>
-                            <td>{{ d.notas[1].nota if d.notas|length >= 2 else '–' }}</td>
-                            <td>{{ d.notas[2].nota if d.notas|length >= 3 else '–' }}</td>
-                            <td>{{ d.notas[3].nota if d.notas|length >= 4 else '–' }}</td>
-                            <td><strong>{{ d.media_final }}</strong></td>
-                            {% if d.situacao == "Aprovado"%}
-                            <td class="bg-success text-black">{{ d.situacao }}</td>
-                            {% elif d.situacao == "Reprovado"%}
-                            <td class="bg-danger text-black">{{ d.situacao }}</td>
-                            {% elif d.situacao == "Cursando"%}
-                            <td class="bg-warning text-black">{{ d.situacao }}</td>
+                            <td>{{ (d.notas[0].nota if d.notas|length >= 1 else '-') or '-' }}</td>
+                            <td>{{ (d.notas[1].nota if d.notas|length >= 2 else '-') or '-' }}</td>
+                            <td>{{ (d.notas[2].nota if d.notas|length >= 3 else '-') or '-' }}</td>
+                            <td>{{ (d.notas[3].nota if d.notas|length >= 4 else '-') or '-' }}</td>
+                            <td><strong>{{ d.media_final if d.media_final not in [None, 'None', 'null', ''] else '-' }}</strong></td>
+                            {% if d.situacao == "Aprovado" %}
+                                <td class="bg-success text-black">{{ d.situacao }}</td>
+                            {% elif d.situacao == "Reprovado" %}
+                                <td class="bg-danger text-black">{{ d.situacao }}</td>
+                            {% elif d.situacao == "Cursando" %}
+                                <td class="bg-warning text-black">{{ d.situacao }}</td>
+                            {% else %}
+                                <td>{{ d.situacao or "-" }}</td>
                             {% endif %}
                         </tr>
                     {% endfor %}

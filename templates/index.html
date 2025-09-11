@@ -1,10 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}Início{% endblock %}
+{% block title %}Bem-vindo ao SUAP Client{% endblock %}
+
+{% block navbar %}{% endblock %}
+
 
 {% block content %}
-<container class="text-center">
-  <h2>Página Inicial</h2>
-  <p>Bem-vindo ao cliente SUAP!</p>
-</container>
+<div class="container-fluid d-flex justify-content-center align-items-center vh-100">
+
+  <div class="text-center p-5 rounded-3 shadow-lg" style="background-color: rgba(33, 37, 41, 0.75); border: 1px solid rgba(255, 255, 255, 0.1);">
+    
+    <i class="bi bi-mortarboard-fill display-1 text-primary mb-3"></i>
+    <h1 class="display-4 fw-bold text-white">SUAP Client</h1>
+    <p class="lead text-white-50 mb-4">Acesse seu perfil acadêmico e boletim de forma simples e rápida.</p>
+    <hr class="my-4" style="color: rgba(255, 255, 255, 0.2);">
+
+    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg px-5 py-3 fw-bold">
+      <i class="bi bi-box-arrow-in-right me-2"></i> Entrar com SUAP
+    </a>
+  </div>
+
+</div>
 {% endblock %}

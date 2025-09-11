@@ -1,36 +1,39 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Meu Perfil</h2>
-    {% if user_data %}
-        <div class="card mb-3" style="max-width: 600px;">
-            <div class="row g-0">
-                <div class="col-md-4 text-center p-3">
-                    {% if user_data.url_foto %}
-                        <img src="{{ user_data.url_foto }}" class="img-fluid rounded" alt="Foto do usuário">
-                    {% else %}
-                        <img src="{{ url_for('static', filename='img/avatar.png') }}" class="img-fluid rounded" alt="Sem foto">
-                    {% endif %}
-                </div>
-                <div class="col-md-8">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ user_data.nome_completo }}</h5>
-                        <p><strong>Matrícula:</strong> {{ user_data.matricula }}</p>
-                        <p><strong>Email:</strong> {{ user_data.email }}</p>
-                        <p><strong>CPF:</strong> {{ user_data.cpf }}</p>
-                        {% if student_data %}
-                            <p><strong>Curso:</strong> {{ student_data.curso or 'Não informado' }}</p>
-                            <p><strong>Situação:</strong> {{ student_data.situacao or '---' }}</p>
+<div class="container mt-4 d-flex justify-content-center">
+    <div class="w-100" style="max-width: 600px;">
+        <h2 class="text-center mb-4">Meu Perfil</h2>
+        {% if user_data %}
+            <div class="card shadow">
+                <div class="row g-0">
+                    <div class="col-md-4 text-center p-3">
+                        {% if user_data.url_foto %}
+                            <img src="{{ user_data.url_foto }}" class="img-fluid rounded" alt="Foto do usuário">
                         {% else %}
-                            <p><em>Informações acadêmicas não encontradas.</em></p>
+                            <img src="{{ url_for('static', filename='img/avatar.png') }}" class="img-fluid rounded" alt="Sem foto">
                         {% endif %}
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ user_data.nome_completo }}</h5>
+                            <p><strong>Matrícula:</strong> {{ user_data.matricula }}</p>
+                            <p><strong>Email:</strong> {{ user_data.email }}</p>
+                            <p><strong>CPF:</strong> {{ user_data.cpf }}</p>
+                            {% if student_data %}
+                                <p><strong>Curso:</strong> {{ student_data.curso or 'Não informado' }}</p>
+                                <p><strong>Situação:</strong> {{ student_data.situacao or '---' }}</p>
+                            {% else %}
+                                <p><em>Informações acadêmicas não encontradas.</em></p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    {% else %}
-        <p>Erro ao carregar dados do usuário.</p>
-    {% endif %}
+        {% else %}
+            <p class="text-center text-danger">Erro ao carregar dados do usuário.</p>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
+

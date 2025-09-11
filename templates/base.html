@@ -2,19 +2,22 @@
 <html lang="pt-br">
   <head>
     <meta charset="utf-8">
-    <title>{% block title %}SUAP Client{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <title>{% block title %}SUAP CLIENT{% endblock %}</title>
   </head>
-  <body>
-    <header>
-      <h1>SUAP Client</h1>
-      <nav>
-        <a href="{{ url_for('index') }}">Início</a>
+  <body class="bg-dark text-white">
+    <header class="">
+      <h1 class="text-center">SUAP CLIENT</h1>
+      <nav class="text-center">
         {% if user %}
-          <a href="{{ url_for('perfil') }}">Perfil</a>
-          <a href="{{ url_for('boletim') }}">Boletim</a>
-          <a href="{{ url_for('logout') }}">Sair</a>
+      
+          <button  type="button" class="btn btn-secondary text-center"><a class="dropdown-item nav-link" href="{{ url_for('perfil') }}">Perfil</a></button>
+          <button  type="button" class="btn btn-secondary text-center"><a class="dropdown-item nav-link" href="{{ url_for('boletim') }}">Boletim</a></button>
+          <button  type="button" class="btn btn-secondary text-center"><a class="dropdown-item nav-link" href="{{ url_for('logout') }}">Sair</a></button>
+      
         {% else %}
-          <a href="{{ url_for('login') }}">Entrar com SUAP</a>
+          <button  type="button" class="btn btn-secondary text-center"><a class="nav-link" href="{{ url_for('login') }}">Entrar com SUAP</a></button>
         {% endif %}
       </nav>
     </header>

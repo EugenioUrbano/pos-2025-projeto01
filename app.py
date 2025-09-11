@@ -21,7 +21,7 @@ suap = oauth.register(
     access_token_url="https://suap.ifrn.edu.br/o/token/",
     authorize_url="https://suap.ifrn.edu.br/o/authorize/",
     api_base_url="https://suap.ifrn.edu.br/api/v2/",
-    client_kwargs={"scope": "identificacao email"},
+    client_kwargs={"scope": "identificacao email documentos_pessoais"},
 )
 
 # --- Helpers ---
@@ -29,29 +29,25 @@ def is_logged_in():
     return "token" in session
 
 def make_suap_request(endpoint):
-    """Faz requisições autenticadas para a API do SUAP"""
     if not is_logged_in():
         return None
-
     headers = {
         "Authorization": f"Bearer {session['token']['access_token']}",
         "Accept": "application/json"
     }
-
     try:
         url = f"https://suap.ifrn.edu.br/api/v2/{endpoint}"
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             return response.json()
         else:
-            print(f"Erro {response.status_code} na requisição para {endpoint}")
+            print(f"Erro {response.status_code} na requisição para {endpoint}: {response.text}")
             return None
     except Exception as e:
         print(f"Erro na requisição para {endpoint}: {e}")
         return None
 
 def fetch_user():
-    """Busca dados básicos do usuário logado"""
     user_data = make_suap_request("minhas-informacoes/meus-dados/")
     if user_data:
         user_data['matricula'] = user_data.get('matricula', '')
@@ -63,49 +59,40 @@ def fetch_user():
     return user_data
 
 def fetch_student_data():
-    """Busca informações acadêmicas do estudante (curso)"""
     cursos = make_suap_request("minhas-informacoes/meus-cursos/")
     if cursos and isinstance(cursos, list) and len(cursos) > 0:
-        return cursos[0]  # primeiro curso ativo
+        return cursos[0]
     return None
 
 def fetch_periods():
-    """Busca períodos letivos disponíveis no boletim"""
-    periods_data = make_suap_request("minhas-informacoes/boletim/")
-    print(">>> DEBUG periods:", periods_data)
-
-    if periods_data and isinstance(periods_data, dict) and 'results' in periods_data:
-        return periods_data['results']
-    elif periods_data and isinstance(periods_data, list):
+    periods_data = make_suap_request("minhas-informacoes/meus-periodos-letivos/")
+    if periods_data and isinstance(periods_data, list):
         return periods_data
     return []
 
 def fetch_boletim(ano, periodo):
-    """Busca boletim para um ano e período específico"""
-    # Tenta formato com query params
-    boletim_data = make_suap_request(
-        f"minhas-informacoes/boletim/?ano_letivo={ano}&periodo_letivo={periodo}"
-    )
-    print(">>> DEBUG boletim (query params):", boletim_data)
+    endpoint = f"minhas-informacoes/boletim/{ano}/{periodo}/"
+    boletim_data = make_suap_request(endpoint)
 
-    if boletim_data and isinstance(boletim_data, dict) and 'results' in boletim_data:
-        return boletim_data['results']
-    if boletim_data and isinstance(boletim_data, list) and len(boletim_data) > 0:
+    if boletim_data and isinstance(boletim_data, list):
+        # Normalizar carga horária para cada disciplina
+        for d in boletim_data:
+            carga_horaria = (
+                d.get("carga_horaria")
+                or d.get("ch_total")
+                or d.get("componente_curricular_ch")
+            )
+            if isinstance(d.get("disciplina"), dict):
+                carga_horaria = carga_horaria or d["disciplina"].get("carga_horaria")
+            if d.get("diario") and isinstance(d["diario"].get("disciplina"), dict):
+                carga_horaria = carga_horaria or d["diario"]["disciplina"].get("carga_horaria")
+
+            d["carga_horaria_normalizada"] = carga_horaria or "N/A"
+
         return boletim_data
-
-    # Se não vier nada, tenta formato alternativo
-    boletim_data_alt = make_suap_request(
-        f"minhas-informacoes/boletim/{ano}/{periodo}/"
-    )
-    print(">>> DEBUG boletim (rota direta):", boletim_data_alt)
-
-    if boletim_data_alt and isinstance(boletim_data_alt, list):
-        return boletim_data_alt
-
     return []
 
-
-# Disponibiliza user em todos os templates
+# --- Context Processor ---
 @app.context_processor
 def inject_user():
     user = fetch_user() if is_logged_in() else None
@@ -142,7 +129,6 @@ def logout():
 def perfil():
     if not is_logged_in():
         return redirect(url_for("login"))
-
     user_data = fetch_user()
     student_data = fetch_student_data()
     return render_template("perfil.html", user_data=user_data, student_data=student_data)
@@ -153,31 +139,29 @@ def boletim():
         return redirect(url_for("login"))
 
     periods = fetch_periods()
+    ano_selecionado = request.args.get("ano", type=int)
 
-    ano = request.args.get("ano", type=int)
-    periodo = request.args.get("periodo", type=int)
-
-    if not ano or not periodo:
+    # Define o ano mais recente como padrão se nenhum for selecionado
+    if not ano_selecionado:
         if periods:
-            sorted_periods = sorted(
-                periods,
-                key=lambda x: (x['ano_letivo'], x['periodo_letivo']),
-                reverse=True
-            )
-            ano = sorted_periods[0]['ano_letivo']
-            periodo = sorted_periods[0]['periodo_letivo']
+            anos_disponiveis = sorted(list(set(p['ano_letivo'] for p in periods)), reverse=True)
+            ano_selecionado = anos_disponiveis[0]
         else:
-            current_date = date.today()
-            ano = current_date.year
-            periodo = 1 if current_date.month <= 6 else 2
+            ano_selecionado = date.today().year
 
-    boletim_data = fetch_boletim(ano, periodo)
+    # Buscar boletim nos dois períodos e juntar
+    boletim_data = []
+    boletim_p1 = fetch_boletim(ano_selecionado, 1)
+    boletim_p2 = fetch_boletim(ano_selecionado, 2)
+    if boletim_p1:
+        boletim_data.extend(boletim_p1)
+    if boletim_p2:
+        boletim_data.extend(boletim_p2)
 
     return render_template(
         "boletim.html",
         boletim=boletim_data,
-        ano=ano,
-        periodo=periodo,
+        ano_selecionado=ano_selecionado,
         periods=periods
     )
 

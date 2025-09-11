@@ -26,15 +26,17 @@
             <table class="table table-bordered table-hover align-middle">
                 <thead class="table-dark text-center">
                     <tr>
-                        <th scope="col" class="text-start" style="width: 35%;">Disciplina</th>
-                        <th scope="col">C.H.</th>
-                        <th scope="col">Faltas</th>
-                        <th scope="col">1B</th>
-                        <th scope="col">2B</th>
-                        <th scope="col">3B</th>
-                        <th scope="col">4B</th>
-                        <th scope="col">Média</th>
-                        <th scope="col" class="text-start">Situação</th>
+                        <th class="text-start">Disciplina</th>
+                        <th>C.H.</th>
+                        <th>Total de Aulas</th>
+                        <th>Faltas</th>
+                        <th>% Freq.</th>
+                        <th>1º Bim</th>
+                        <th>2º Bim</th>
+                        <th>3º Bim</th>
+                        <th>4º Bim</th>
+                        <th>Média Final</th>
+                        <th>Situação</th>
                     </tr>
                 </thead>
                 <tbody class="text-center">
@@ -51,22 +53,35 @@
                                     {{ d.componente_curricular | default('N/A') }}
                                 {% endif %}
                             </td>
-                            <td>{{ d.carga_horaria_normalizada }}</td>
-                            <td>{{ d.numero_faltas | default('N/A', true) }}</td>
-                            <td>{{ d.nota_etapa_1.nota | default('–', true) }}</td>
-                            <td>{{ d.nota_etapa_2.nota | default('–', true) }}</td>
-                            <td>{{ d.nota_etapa_3.nota | default('–', true) }}</td>
-                            <td>{{ d.nota_etapa_4.nota | default('–', true) }}</td>
+                            <td>{{ d.carga_horaria_normalizada }} aulas</td>
+                            <td>{{ d.total_aulas_dadas }}</td>
+                            <td>{{ d.faltas_normalizadas }}</td>
                             <td>
-                                <strong>{{ d.media_final_disciplina | default(d.nota_final, true) | default('–', true) }}</strong>
+                                {% if d.total_aulas_dadas > 0 %}
+                                    {{ ((d.total_aulas_dadas - d.faltas_normalizadas) / d.total_aulas_dadas * 100) | round(0) }}%
+                                {% else %}
+                                    100%
+                                {% endif %}
                             </td>
-                            {% set situacao_class = 'text-success' if 'Aprovado' in d.situacao else 'text-danger' if 'Reprovado' in d.situacao else 'text-secondary' %}
-                            <td class="{{ situacao_class }} text-start">
-                                <strong>{{ d.situacao | default('Cursando', true) }}</strong>
-                            </td>
+                            <td>{{ d.notas[0].nota if d.notas|length >= 1 else '–' }}</td>
+                            <td>{{ d.notas[1].nota if d.notas|length >= 2 else '–' }}</td>
+                            <td>{{ d.notas[2].nota if d.notas|length >= 3 else '–' }}</td>
+                            <td>{{ d.notas[3].nota if d.notas|length >= 4 else '–' }}</td>
+                            <td><strong>{{ d.media_final }}</strong></td>
+                            <td>{{ d.situacao }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
+                <tfoot class="table-secondary fw-bold text-center">
+                    <tr>
+                        <td class="text-start">Totais</td>
+                        <td>{{ total_ch }} aulas</td>
+                        <td>{{ total_aulas_dadas }}</td>
+                        <td>{{ total_faltas }}</td>
+                        <td>{{ "%.2f"|format(frequencia) }}%</td>
+                        <td colspan="6"></td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     {% else %}

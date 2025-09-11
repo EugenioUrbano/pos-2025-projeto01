@@ -73,21 +73,39 @@ def fetch_periods():
 def fetch_boletim(ano, periodo):
     endpoint = f"minhas-informacoes/boletim/{ano}/{periodo}/"
     boletim_data = make_suap_request(endpoint)
-
     if boletim_data and isinstance(boletim_data, list):
-        # Normalizar carga horária para cada disciplina
+        # Normalizar cada disciplina
         for d in boletim_data:
-            carga_horaria = (
-                d.get("carga_horaria")
-                or d.get("ch_total")
-                or d.get("componente_curricular_ch")
-            )
-            if isinstance(d.get("disciplina"), dict):
-                carga_horaria = carga_horaria or d["disciplina"].get("carga_horaria")
-            if d.get("diario") and isinstance(d["diario"].get("disciplina"), dict):
-                carga_horaria = carga_horaria or d["diario"]["disciplina"].get("carga_horaria")
+            # Carga horária
+            ch = d.get("carga_horaria") or d.get("carga_horaria_total")
+            d["carga_horaria_normalizada"] = int(ch) if ch else 0
 
-            d["carga_horaria_normalizada"] = carga_horaria or "N/A"
+            # Faltas
+            faltas = d.get("numero_faltas") or d.get("faltas")
+            d["faltas_normalizadas"] = int(faltas) if faltas else 0
+
+            # Total de aulas dadas
+            total_aulas_dadas = (
+                d.get("carga_horaria_cumprida")
+                or d.get("quantidade_aulas")
+                or d.get("total_aulas")
+            )
+            d["total_aulas_dadas"] = int(total_aulas_dadas) if total_aulas_dadas else 0
+
+            # Notas dos 4 bimestres
+            d["notas"] = []
+            for i in range(1, 5):
+                nota = d.get(f"nota_etapa_{i}")
+                if isinstance(nota, dict) and "nota" in nota:
+                    d["notas"].append({"etapa": f"{i}º Bimestre", "nota": nota["nota"]})
+                elif nota is not None:
+                    d["notas"].append({"etapa": f"{i}º Bimestre", "nota": nota})
+
+            # Média final
+            d["media_final"] = d.get("media_final") or d.get("media_final_disciplina") or "-"
+
+            # Situação
+            d["situacao"] = d.get("situacao") or "Cursando"
 
         return boletim_data
     return []
@@ -141,7 +159,6 @@ def boletim():
     periods = fetch_periods()
     ano_selecionado = request.args.get("ano", type=int)
 
-    # Define o ano mais recente como padrão se nenhum for selecionado
     if not ano_selecionado:
         if periods:
             anos_disponiveis = sorted(list(set(p['ano_letivo'] for p in periods)), reverse=True)
@@ -149,20 +166,32 @@ def boletim():
         else:
             ano_selecionado = date.today().year
 
-    # Buscar boletim nos dois períodos e juntar
     boletim_data = []
     boletim_p1 = fetch_boletim(ano_selecionado, 1)
-    boletim_p2 = fetch_boletim(ano_selecionado, 2)
     if boletim_p1:
         boletim_data.extend(boletim_p1)
+    boletim_p2 = fetch_boletim(ano_selecionado, 2)
     if boletim_p2:
         boletim_data.extend(boletim_p2)
+
+    # Totais
+    total_ch = sum(d.get("carga_horaria_normalizada", 0) for d in boletim_data)
+    total_aulas_dadas = sum(d.get("total_aulas_dadas", 0) for d in boletim_data)
+    total_faltas = sum(d.get("faltas_normalizadas", 0) for d in boletim_data)
+
+    frequencia = 100.0
+    if total_aulas_dadas > 0:
+        frequencia = (total_aulas_dadas - total_faltas) / total_aulas_dadas * 100
 
     return render_template(
         "boletim.html",
         boletim=boletim_data,
         ano_selecionado=ano_selecionado,
-        periods=periods
+        periods=periods,
+        total_ch=total_ch,
+        total_aulas_dadas=total_aulas_dadas,
+        total_faltas=total_faltas,
+        frequencia=frequencia,
     )
 
 if __name__ == "__main__":

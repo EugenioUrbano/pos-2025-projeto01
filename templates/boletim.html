@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <h2>Boletim Escolar</h2>
 
-    <form method="get" class="mb-4 p-3 border rounded bg-light">
+    <form method="get" class="mb-4 p-3 border rounded bg-dark text-white">
         <div class="row g-3 align-items-end">
             <div class="col-md-9">
                 <label for="ano" class="form-label">Ano Letivo</label>
@@ -16,7 +16,7 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                <button type="submit" class="btn btn-light w-100">Filtrar</button>
             </div>
         </div>
     </form>
@@ -80,7 +80,7 @@
                         </tr>
                     {% endfor %}
                 </tbody>
-                <tfoot class="table-secondary fw-bold text-center">
+                <tfoot class="table fw-bold text-center">
                     <tr>
                         <td class="text-start">Totais</td>
                         <td>{{ total_ch }} aulas</td>
